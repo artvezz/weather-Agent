@@ -1,45 +1,111 @@
-Overview
-========
+Weather Project
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+Pipeline de dados end-to-end que coleta dados meteorológicos em tempo real, armazena em banco de dados na nuvem e envia relatórios automáticos por email.
 
-Project Contents
-================
+🏗️ Arquitetura
 
-Your Astro project contains the following files and folders:
+OpenWeather API
+      ↓
+Apache Airflow (Docker/Astronomer) — coleta a cada 2 min
+      ↓
+Supabase (PostgreSQL)
+      ↓
+Streamlit Dashboard
+      ↓
+Flask API + ngrok
+      ↓
+N8N → Email automático diário
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+🛠️ Stack
 
-Deploy Your Project Locally
-===========================
+CamadaTecnologiaOrquestraçãoApache Airflow 3.x (Astronomer)ContainerizaçãoDockerBanco de dadosSupabase (PostgreSQL)DashboardStreamlit + PlotlyAutomaçãoN8N CloudExposiçãoFlask + ngrokLinguagemPython 3.12
 
-Start Airflow on your local machine by running 'astro dev start'.
+📦 Estrutura do Projeto
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+AI Weather Project/
+├── dags/
+│   ├── weather_pipeline.py   # DAG do Airflow (ETL)
+│   └── app.py                # Dashboard Streamlit
+├── exports/                  # Imagens geradas para email
+├── api.py                    # API Flask para exportação
+├── screenshot.py             # Captura do dashboard
+├── export.py                 # Exportação de gráficos
+├── requirements.txt
+├── Dockerfile
+└── .env
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+⚙️ Como Rodar
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+Pré-requisitos
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
 
-Deploy Your Project to Astronomer
-=================================
+Docker Desktop
+Astronomer CLI (astro)
+Python 3.12
+Conta Supabase
+Conta OpenWeatherMap
+ngrok
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
 
-Contact
-=======
+1. Clone o repositório
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+bashgit clone https://github.com/seu-usuario/ai-weather-project
+cd ai-weather-project
+
+2. Configure o .env
+
+envOPENWEATHER_API_KEY=sua_chave
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+DB_HOST=seu_host.supabase.com
+DB_PORT=6543
+DB_DBNAME=postgres
+
+3. Suba o Airflow
+
+powershellastro dev start
+
+Acesse: http://localhost:8080 (admin/admin)
+
+4. Rode o Dashboard
+
+powershellstreamlit run dags/app.py
+
+Acesse: http://localhost:8501
+
+5. Rode a API de exportação
+
+powershellpython api.py
+ngrok http 5000
+
+6. Configure o N8N
+
+
+Cron Trigger → HTTP Request (/export) → Gmail
+
+
+🔄 Pipeline ETL
+
+Extract → Coleta dados da API OpenWeatherMap (temperatura, umidade, pressão, vento)
+
+Transform → Normaliza os dados, converte Kelvin para Celsius, adiciona timestamps
+
+Load → Insere no Supabase com schema dedicado (weather.weather_data)
+
+📊 Dashboard
+
+
+Temperatura atual e sensação térmica
+Condição climática com ícone
+Gráfico de umidade por hora
+Métricas de vento e pressão
+Auto-refresh a cada 2 minutos
+
+
+📧 Automação de Email
+
+Todos os dias um relatório com screenshot do dashboard é enviado automaticamente via N8N + Gmail.
+
+📝 Licença
+
+MIT
