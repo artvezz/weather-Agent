@@ -1,0 +1,7 @@
+psycopg2-binary
+pandas
+pyarrow
+requests
+streamlit
+plotly
+python-dotenv
